@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轉檔小工具</title>
+</head>
+<body>
+    <div style="height: 5vh;"></div>
+    <input type="file" name="original" id="fileOriginal" accept=".txt">
+    <hr>
+    <button id="btnDownload" disabled>請提供檔案</button>
+
+    <br>
+    <hr>
+
+    <script>
+        let fileInput = document.querySelector("#fileOriginal");
+        let btnDownload = document.querySelector("#btnDownload");
+
+        const setBtnDownloadText = (newText) => {
+            btnDownload.removeAttribute("disabled")
+            if(newText == null) {
+                newText = "請提供檔案";
+                btnDownload.setAttribute("disabled", "disabled");
+            }
+            btnDownload.innerHTML = newText;
+        };
+
+        function parseStringToArray(str) {
+            // 正規表達式用於匹配以數字結尾的子串
+            const regex = /\+[-|0][\d\w-]+\b/g;
+            // 使用正規表達式提取匹配的所有子串
+            const matches = str.match(regex);
+            // 檢查是否找到匹配項目
+            if (matches) {
+                // 去除每個匹配項目的開頭的'+'符號
+                return matches.map(match => match.substring(1));
+            } else {
+                // 如果沒有找到匹配項目，返回一個空陣列
+                return [];
+            }
+        }
+
+        let aNewFile = null;
+        // register handler
+        fileInput.addEventListener("change", (e) => {
+            // if file exist
+            if(aNewFile != null) {
+                aNewFile.remove();
+            }
+            if(fileInput.files.length == 0) {
+                setBtnDownloadText();
+                return;
+            }
+            try {
+                fileInput.files[0].text().then(
+                    content => {
+                        aNewFile = document.createElement("a");
+                        
+                        let csvContent = "data:text/csv;charset=utf-8,";  // URI header
+                        for(let line of content.split("\n")) {
+                            let arr = parseStringToArray(line);
+                            if(arr.length == 0) {
+                                continue;
+                            }
+                            csvContent += `${arr[0]},${Number(arr[2])},${Number(arr[3])},${Number(arr[4])}\n`;
+                        }
+                        let encoderedURI = encodeURI(csvContent);
+                        console.log(encoderedURI)
+                        aNewFile.href = encoderedURI;
+                        aNewFile.download = fileInput.files[0].name + ".csv"
+                    }
+                );
+                setBtnDownloadText("下載");
+            } catch (error) {
+                setBtnDownloadText("發生問題，請洽開發人員");
+                fileInput.setAttribute("disabled", "disabled");
+                btnDownload.setAttribute("disabled", "disabled");
+            }
+        });
+        btnDownload.addEventListener("click", (e) => {
+            if(aNewFile != null) {   
+                aNewFile.click();
+            }
+        });
+    </script>
+</body>
+</html>
