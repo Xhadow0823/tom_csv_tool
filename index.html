@@ -7,7 +7,7 @@
 </head>
 <body>
     <div style="height: 5vh;"></div>
-    <input type="file" name="original" id="fileOriginal" accept=".txt">
+    <input type="file" name="original" id="fileOriginal">
     <hr>
     <button id="btnDownload" disabled>請提供檔案</button>
 
@@ -29,7 +29,7 @@
 
         function parseStringToArray(str) {
             // 正規表達式用於匹配以數字結尾的子串
-            const regex = /\+[-|0][\d\w-]+\b/g;
+            const regex = /\+[-|0][\d\w\-\.]+\b/g;
             // 使用正規表達式提取匹配的所有子串
             const matches = str.match(regex);
             // 檢查是否找到匹配項目
@@ -41,6 +41,14 @@
                 return [];
             }
         }
+
+        const removeLeadingZeros = (str) => {
+            let result = str.replace(/^0*/, '');
+            if(result.length == 0) {
+                result = "0";
+            }
+            return result;
+        };
 
         let aNewFile = null;
         let fixedPointBase = 10000;  // 4
@@ -62,10 +70,11 @@
                         let csvContent = "data:text/csv;charset=utf-8,";  // URI header
                         for(let line of content.split("\n")) {
                             let arr = parseStringToArray(line);
+                            console.log(arr)
                             if(arr.length == 0) {
                                 continue;
                             }
-                            csvContent += `${arr[0]},${Number(arr[2])/fixedPointBase},${Number(arr[3])/fixedPointBase},${Number(arr[4])/fixedPointBase}\n`;
+                            csvContent += `${removeLeadingZeros(arr[0])},${Number(arr[2])/fixedPointBase},${Number(arr[3])/fixedPointBase},${Number(arr[4])/fixedPointBase},${removeLeadingZeros(arr[1])}\n`;
                         }
                         let encoderedURI = encodeURI(csvContent);
                         console.log(encoderedURI)
